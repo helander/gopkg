@@ -27,8 +27,9 @@ type MessageQueueAttribute struct {
 }
 
 const (
+	O_RDONLY = C.O_RDONLY
 	O_WRONLY = C.O_WRONLY
-	O_CREAT    = C.O_CREAT
+	O_CREAT  = C.O_CREAT
 
 //	MSGSIZE_MAX     = 16777216
 //	MSGSIZE_DEFAULT = MSGSIZE_MAX
@@ -60,6 +61,12 @@ func Open(name string, oflag int, mode int, attr *MessageQueueAttribute) (int, e
 func Send(h int, data []byte, priority uint) (int, error) {
 	byteStr := *(*string)(unsafe.Pointer(&data))
 	rv, err := C.mq_send(C.int(h), C.CString(byteStr), C.size_t(len(data)), C.uint(priority))
+	return int(rv), err
+}
+
+func Receive(h int, data []byte, len int) (int, error) {
+	byteStr := *(*string)(unsafe.Pointer(&data))
+	rv, err := C.mq_receive(C.int(h), C.CString(byteStr), C.size_t(len), nil)
 	return int(rv), err
 }
 
