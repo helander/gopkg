@@ -19,6 +19,13 @@ import (
 	"unsafe"
 )
 
+
+type MessageQueueAttribute struct {
+        Flags   int
+        MaxMsg  int
+	MsgSize int
+}
+
 const (
 	O_RDONLY = C.O_RDONLY
 	O_WRONLY = C.O_WRONLY
