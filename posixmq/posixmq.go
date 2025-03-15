@@ -38,28 +38,28 @@ var (
 	MemoryAllocationError = fmt.Errorf("Memory Allocation Error")
 )
 
-type receiveBuffer struct {
+type ReceiveBuffer struct {
 	buf  *C.char
 	size C.size_t
 }
 
-func newReceiveBuffer(bufSize int) (*receiveBuffer, error) {
+func NewReceiveBuffer(bufSize int) (*ReceiveBuffer, error) {
 	buf := (*C.char)(C.malloc(C.size_t(bufSize)))
 	if buf == nil {
 		return nil, MemoryAllocationError
 	}
 
-	return &receiveBuffer{
+	return &ReceiveBuffer{
 		buf:  buf,
 		size: C.size_t(bufSize),
 	}, nil
 }
 
-func (rb *receiveBuffer) free() {
+func (rb *ReceiveBuffer) Free() {
 	C.free(unsafe.Pointer(rb.buf))
 }
 
-func mq_open(name string, oflag int, mode int, attr *MessageQueueAttribute) (int, error) {
+func Mq_open(name string, oflag int, mode int, attr *MessageQueueAttribute) (int, error) {
 	var cAttr *C.struct_mq_attr
 	if attr != nil {
 		cAttr = &C.struct_mq_attr{
@@ -77,14 +77,14 @@ func mq_open(name string, oflag int, mode int, attr *MessageQueueAttribute) (int
 	return int(h), nil
 }
 
-func mq_send(h int, data []byte, priority uint) (int, error) {
+func Mq_send(h int, data []byte, priority uint) (int, error) {
 	var cmsg *C.char = C.CString(string(data[:]))
 	defer C.free(unsafe.Pointer(cmsg))
 	rv, err := C.mq_send(C.int(h), cmsg, C.size_t(len(data)), C.uint(priority))
 	return int(rv), err
 }
 
-func mq_receive(h int, recvBuf *receiveBuffer) ([]byte, uint, error) {
+func Mq_receive(h int, recvBuf *ReceiveBuffer) ([]byte, uint, error) {
 	var msgPrio C.uint
 
 	size, err := C.mq_receive(C.int(h), recvBuf.buf, recvBuf.size, &msgPrio)
@@ -95,7 +95,7 @@ func mq_receive(h int, recvBuf *receiveBuffer) ([]byte, uint, error) {
 	return C.GoBytes(unsafe.Pointer(recvBuf.buf), C.int(size)), uint(msgPrio), nil
 }
 
-func mq_notify(h int, sigNo int) (int, error) {
+func Mq_notify(h int, sigNo int) (int, error) {
 	sigEvent := &C.struct_sigevent{
 		sigev_notify: C.SIGEV_SIGNAL, // posix_mq supports only signal.
 		sigev_signo:  C.int(sigNo),
@@ -105,12 +105,12 @@ func mq_notify(h int, sigNo int) (int, error) {
 	return int(rv), err
 }
 
-func mq_close(h int) (int, error) {
+func Mq_close(h int) (int, error) {
 	rv, err := C.mq_close(C.int(h))
 	return int(rv), err
 }
 
-func mq_unlink(name string) (int, error) {
+func Mq_unlink(name string) (int, error) {
 	rv, err := C.mq_unlink(C.CString(name))
 	return int(rv), err
 }
